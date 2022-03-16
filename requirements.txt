@@ -1,0 +1,3 @@
+robotframework==4.1.3
+robotframework-selenium2library==3.0.0
+pip install robotframework-debuglibrary==0.9.0
