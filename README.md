@@ -2,7 +2,7 @@
 
 **Requirements:**
 - Python 3.8 +
-- Pip pip 20 +
+- Pip 20 +
 
 **How to set up project:**
 
