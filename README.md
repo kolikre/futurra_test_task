@@ -13,7 +13,7 @@
 5. Install requirments `pip install -r requirments.txt`
 6. Run all tests `robot -d reports tests/`
 
-The test run report you can see at `reports/reports/report.html`
+The test run report you can see at `reports/report.html`
 
-The test run log you can see at `reports/reports/log.html`
+The test run log you can see at `reports/log.html`
 
