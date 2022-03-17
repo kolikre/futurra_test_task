@@ -1,59 +1,52 @@
 *** Settings ***
 Resource  ../testResources/Initialize.robot
 Resource  ../configs/config.robot
+Resource  ../testResources/main.robot
 
 Library  DebugLibrary
-Library  BuiltIn
 
+Test Setup  run keywords  Initialize system  AND
+...                        Go to  ${URL}
+
+Test Teardown  Close All Browsers
 
 
 *** Variables ***
-${URL}  https://ironvpn.me/?source=test
-${open_modal_button}  //button[@data-hystmodal="#modalForms" and @class="btn"]
-${email_input_field}  //input[@id="email"]
-${submit_email_button}  //button[@id="validate"]
-${privacy_policy_checkbox}  //i[@class="checkplace"]
-${get_vpn_button}  //section[@id="trial"]//span[contains(text(), "Get IronVPN Now")]//parent::a
-${iframe_card_number_input_field}  //form[@name="paymentForm"]//input[@name="cardNumber"]
-${iframe_card_expiration_input_field}  //form[@name="paymentForm"]//input[@name="cardExpiryDate"]
-${iframe_card_cvv_input_field}  //form[@name="paymentForm"]//input[@name="cardCvv"]
-${iframe_payment_form}  //iframe[@id="solid-payment-form-iframe"]
-${preloader}  //div[@class="preloader"]
-${iframe_submit_payment_button}  //form[@name="paymentForm"]//button
 ${payment_successful}  //h3[contains(text(), "Payment was successful!")]
+${wrong_card_number_error_message}  //div[@id="cardNumber_error-text" and contains(text(), "Please, check card number")]
+${wrong_expiration_date_error_message}  //div[@id="cardExpiryDate_error-text" and contains(text(), "You entered an expiration date that has already passed")]
 
 
 *** Test Cases ***
-First test case
-    [Setup]   run keywords  Initialize system  AND
-    ...                     Go to  ${URL}
+It's not possible to pay without approving a privacy policy
+    [Tags]  None
 
-    Wait Until Element ${open_modal_button} Is Visible Then Click
+    Open Email modal window
     Wait Until Input Field ${email_input_field} Is Visible Then Type ${TEST_EMAIL}
-    Wait Until Element ${privacy_policy_checkbox} Is Visible Then Click
-    Wait Until Element ${submit_email_button} Is Visible Then Click
-    Wait Until Element ${get_vpn_button} Is Visible Then Click
-    sleep  1
-    Wait Until ELement Is Not Visible  ${preloader}  30
+    Run Keyword And Ignore Error  Click element  ${submit_email_button}
+    sleep  3
+    Page Should not Contain Element  ${get_vpn_button}
+
+
+The payment should be successful
+
+    Open Email modal window
+    Insert ${TEST_EMAIL} into "Email" modal window
+    Open payment modal window
     Select frame  ${iframe_payment_form}
-    Wait Until Input Field ${iframe_card_number_input_field} Is Visible Then Type ${CURRENT_CARD_NUMBER}
-    Wait Until Input Field ${iframe_card_expiration_input_field} Is Visible Then Type ${CURRENT_CARD_EXPIRATION_DATE}
-    Wait Until Input Field ${iframe_card_cvv_input_field} Is Visible Then Type ${CURRENT_CARD_CVV}
-    Wait Until Element ${iframe_submit_payment_button} Is Visible Then Click
+    Insert credit card data  &{VALID_CREDIT_CARD_DATA}
+    Submit payment
     Unselect frame
-    debug
-    Element Should Be Visible  ${payment_successful}
+    Wait Until Element Is Visible  ${payment_successful}  30
+    Page title should be  SUCCESSFUL
 
-    debug
-    [Teardown]  Close All Browsers
 
-*** Keywords ***
-Wait Until Element ${element} Is Visible Then Click
-    Wait Until Element Is Visible  ${element}  10
-    Click element  ${element}
+The error should be displayed when entering an incorrect card expiration date
 
-Wait Until Input Field ${element} Is Visible Then Type ${text}
-    Wait Until Element Is Visible  ${element}  10
-    Click Element  ${element}
-    sleep  1s
-    Input Text  ${element}  ${text}
+    Open Email modal window
+    Insert ${TEST_EMAIL} into "Email" modal window
+    Open payment modal window
+    Select frame  ${iframe_payment_form}
+    Insert credit card data  &{CREDIT_CARD_DATA_WITH_INVALID_DATA}
+    Page Should Contain Element   ${wrong_card_number_error_message}
+    Page Should Contain Element   ${wrong_expiration_date_error_message}
